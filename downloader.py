@@ -76,6 +76,7 @@ def playlist_from_Spotify(url,carpeta):
     try:
         descargar_todo(carpeta)
         print("\n✅DESCARGAS COMPLETADAS✅")
+        return True
     except Exception as e:
         print(f"\n❌ Error: {str(e)}")
         return False
