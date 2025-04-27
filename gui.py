@@ -1,14 +1,21 @@
 import tkinter as tk
 from tkinter import filedialog, ttk, messagebox
 from typing import Callable, Optional
+from dotenv import load_dotenv
 
 class GUI:
-    def __init__(self, controller_callback: Callable[[str], None]):
+    def __init__(self, controller_callback: Callable[[str], None], env_var_set):
         self.controller_callback = controller_callback
         self.root = tk.Tk()
         self.root.withdraw()  # Oculta la ventana principal inicialmente
+
+        self.env_var_set = env_var_set
+        self.spotifyId = tk.StringVar()
+        self.spotifySecret = tk.StringVar()
+
         self._setup_path_selection_window()
-        
+    
+    #-------------------------------------SETUPS--------------------------------------
     def _setup_path_selection_window(self):
         """Ventana para selección de path"""
         self.path_window = tk.Toplevel()
@@ -49,12 +56,20 @@ class GUI:
         
         # Botones de acción
         ttk.Button(action_frame, text="Descargar Playlist de Spotify",
-                 command=self._setup_playlistSpot_window).pack(pady=5)
+                 command=self._check_Spotify).pack(pady=5)
         ttk.Button(action_frame, text="Descargar Canción",
                  command=self._setup_song_selection_window).pack(pady=5)
         ttk.Button(action_frame, text="Proximamente",
                  command=lambda: self._send_action("report", path)).pack(pady=5)
         
+        # Panel de opciones
+        config_frame = ttk.LabelFrame(main_frame, text="Configuración")
+        config_frame.pack(fill='both', expand=True, pady=5)
+
+        # Botón de API spotify
+        ttk.Button(config_frame, text="API keys",
+                 command=self._change_API_keys).pack(pady=5)
+
         # Panel abort
         abort_frame = ttk.LabelFrame(main_frame)
         abort_frame.pack(fill="both",expand="True",pady=5)
@@ -117,8 +132,25 @@ class GUI:
         ttk.Label(self.loading_window,text=desc).pack(padx=5,pady=5)
         ttk.Progressbar(self.loading_window, mode='indeterminate').pack(pady=10, padx=20, fill=tk.X)
 
+    def _setup_env_var_window(self):
+        """Ventana para introducir ID y Secret de Spotify"""
+        self.env_var_window = tk.Toplevel()
+        self.env_var_window.title("Introduce tu ID y tu SECRET de la API de Spotify")
+        self.env_var_window.protocol("WM_DELETE_WINDOW", self._return_to_action_selection_from_env_var)
+        
+        # Main frame
+        main_frame = ttk.Frame(self.env_var_window)
+        main_frame.pack(expand=True, fill='both', padx=10, pady=10)
 
-    
+        label = ttk.Label(main_frame, text="ID:").grid(row=0, column=0, padx=5, pady=5, sticky="e")
+        name_song = ttk.Entry(main_frame, textvariable=self.spotifyId, width=30).grid(row=0, column=1, padx=5, pady=5)
+
+        label = ttk.Label(main_frame, text="SECRET:").grid(row=1, column=0, padx=5, pady=5, sticky="e")
+        artists = ttk.Entry(main_frame, textvariable=self.spotifySecret, width=30).grid(row=1, column=1, padx=5, pady=5)
+
+        ttk.Button(main_frame, text="Guardar",
+                 command=self._save_env_var,).grid(row=2,columnspan=2, sticky="ew")
+    #-------------------------------------HELPERS--------------------------------------
     def _select_directory(self):
         path = filedialog.askdirectory()
         if path:
@@ -146,11 +178,27 @@ class GUI:
             self.action_window.deiconify()
             self.controller_callback("name_arts:"+name+":"+artists)  # Notifica al controlador
     
-    def _send_action(self, action: str, path: str):
+    def _check_Spotify(self):
+        if self.env_var_set:
+            self._setup_playlistSpot_window()
+        else:
+            messagebox.showinfo("Antes...","Debes introducir tus claves de la API de Spotify.")
+            self._setup_env_var_window()
+
+    def _save_env_var(self):
+        self._send_action("save_env",self.spotifyId.get()+":"+self.spotifySecret.get())
+        self.env_var_set = True
+        self.env_var_window.destroy()
+    
+    def _load_spot_env_var(self,id,secret):
+        self.spotifyId.set(id)
+        self.spotifySecret.set(secret)     
+
+    def _send_action(self, action: str, arg: str):
         """Envía una acción al controlador"""
-        print(f"Enviando acción al controlador: {action} {path}")
+        print(f"Enviando acción al controlador: {action} {arg}")
         # Aquí normalmente llamarías a un método del controlador
-        self.controller_callback(f"{action}:{path}")
+        self.controller_callback(f"{action}:{arg}")
     
     def _return_to_path_selection(self):
         """Vuelve a la ventana de selección de path"""
@@ -167,10 +215,19 @@ class GUI:
         self.song_selection_window.destroy()
         self.action_window.deiconify()
     
+    def _return_to_action_selection_from_env_var(self):
+        self.env_var_window.destroy()
+        self.action_window.deiconify()
+        
     def _on_close(self):
         """Maneja el cierre de la ventana"""
         self.root.quit()
     
+    def _change_API_keys(self):
+        self._send_action("load_API_keys","")
+        self._setup_env_var_window() 
+
+    #-------------------------------------PUBLIC FUNCTs--------------------------------------
     def run(self):
         self.root.mainloop()
     
