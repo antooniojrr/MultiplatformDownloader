@@ -9,7 +9,7 @@ def main():
     parser.add_argument("--artist", help="Artista de la canción")
 
     args = parser.parse_args()
-    app = Controlador(not (args.url or (args.name and args.artist)))
+    app = Controlador(not (args.url or args.name))
 
     if args.path:
         app.set_current_path(args.path)
@@ -30,7 +30,9 @@ def main():
             else:
                 print("ERROR: No se reconoce el tipo de URL o ID proporcionado")
         # Nombre y artista
-        elif args.name and args.artist:
+        elif args.name:
+            if not args.artist:
+                args.artist = ""
             app._song_with_name_artist(args.name, args.artist)
             
         else:
