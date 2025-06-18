@@ -25,8 +25,8 @@ def main():
                     print("HACERLO")
                 else:
                     print("ERROR con la URL de Spotify")
-            elif "youtube.com" in args.url_or_id or "soundcloud.com" in args.url_or_id:
-                app._yt_sc_with_url(args.url_or_id)
+            elif "youtube.com" in args.url or "soundcloud.com" in args.url:
+                app._yt_sc_with_url(args.url)
             else:
                 print("ERROR: No se reconoce el tipo de URL o ID proporcionado")
         # Nombre y artista
