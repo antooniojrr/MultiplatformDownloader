@@ -4,16 +4,17 @@ import threading
 import os
 
 class Controlador:
-    def __init__(self):
+    def __init__(self,with_gui: bool = True):
         self.current_path = None
         self.env_file=".env"
-
-        if self._check_env_var():
-            self.gui = GUI(self._handle_gui_events,True)
+        if with_gui:
+            if self._check_env_var():
+                self.gui = GUI(self._handle_gui_events,True)
+            else:
+                self.gui = GUI(self._handle_gui_events,False)
         else:
-            self.gui = GUI(self._handle_gui_events,False)
-            
-
+            self.gui = None
+                        
     def _handle_gui_events(self, event_data: str):
         """Maneja todos los eventos provenientes de la GUI"""
         match event_data:
@@ -107,11 +108,18 @@ class Controlador:
     def _song_with_name_artist(self, name: str, artists:str):
         
         good = dl.descargar_cancion(name,artists,self.current_path)
-        self.gui.deleteLoadingWindow()
-        if not good:
-            self.gui.throwError("ERROR","Fallo descargando la canción")
-        else:
-            self.gui.throwInfo("EXITO","La canción se ha descargado correctamente")
+        if self.gui:
+            self.gui.deleteLoadingWindow()
+            if not good:
+                self.gui.throwError("ERROR","Fallo descargando la canción")
+            else:
+                self.gui.throwInfo("EXITO","La canción se ha descargado correctamente")
     
+    def _yt_sc_with_url(self, url: str):
+        dl.descargar_con_url(url,self.current_path)
+
     def iniciar_aplicacion(self):
         self.gui.run()
+    
+    def set_current_path(self, path: str):
+        self.current_path = path
