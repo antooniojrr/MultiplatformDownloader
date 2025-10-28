@@ -34,6 +34,7 @@ An audio downloader compatible with various websites. It includes functionality 
     ```bash
     pip install -r requirements.txt
     ```
+    Apart from this, it is necessary to have the JS libraries "axios" and "dotenv" installed as well.   
 
 3.  Get your Spotify API's Client ID and Client Secret at:
     https://developer.spotify.com/dashboard
